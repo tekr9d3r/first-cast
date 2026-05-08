@@ -22,24 +22,35 @@ const snap: SnapFunction = async (ctx) => {
   const base = snapBaseUrl(ctx.request);
 
   if (ctx.action.type === "get") {
+    const url = new URL(ctx.request.url);
+    const sharedFid = Number(url.searchParams.get("fid")) || null;
+
+    if (sharedFid) {
+      const cast = await getCachedOrFetch(sharedFid);
+      if (cast) return sharedScreen(base, cast);
+    }
+
     return landingScreen(base);
   }
 
   const fid = ctx.action.user?.fid;
   if (!fid) return landingScreen(base);
 
-  const cacheKey = `oldest_cast:${fid}`;
-  const cached = await store.get(cacheKey);
-  if (cached) {
-    return resultScreen(base, JSON.parse(String(cached)) as OldestCast);
-  }
-
-  const cast = await getOldestCast(fid);
+  const cast = await getCachedOrFetch(fid);
   if (!cast) return notFoundScreen();
 
-  await store.set(cacheKey, JSON.stringify(cast));
-  return resultScreen(base, cast);
+  return resultScreen(base, cast, fid);
 };
+
+async function getCachedOrFetch(fid: number): Promise<OldestCast | null> {
+  const cacheKey = `oldest_cast:${fid}`;
+  const cached = await store.get(cacheKey);
+  if (cached) return JSON.parse(String(cached)) as OldestCast;
+
+  const cast = await getOldestCast(fid);
+  if (cast) await store.set(cacheKey, JSON.stringify(cast));
+  return cast;
+}
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const fontsDir = join(__dir, "../assets/fonts");
@@ -105,7 +116,58 @@ function landingScreen(base: string): SnapHandlerResult {
   };
 }
 
-function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
+function sharedScreen(base: string, cast: OldestCast): SnapHandlerResult {
+  const date = formatDate(cast.timestamp);
+  const userLabel = clamp(`@${cast.username}`, 100);
+  const castText = clamp(cast.text, 320);
+
+  return {
+    version: SPEC_VERSION,
+    theme: { accent: "purple" },
+    ui: {
+      root: "page",
+      elements: {
+        page: {
+          type: "stack",
+          props: {},
+          children: ["profile", "sep1", "cast-text", "sep2", "btn-find"],
+        },
+        profile: {
+          type: "item",
+          props: {
+            title: userLabel,
+            description: `First cast · ${date}`,
+            ...(cast.pfpUrl
+              ? { media: { variant: "image", url: cast.pfpUrl, alt: `${cast.username} avatar`, round: true } }
+              : {}),
+          },
+        },
+        sep1: { type: "separator", props: {} },
+        "cast-text": {
+          type: "text",
+          props: { content: castText },
+        },
+        sep2: { type: "separator", props: {} },
+        "btn-find": {
+          type: "button",
+          props: { label: "Find My First Cast ⚡", variant: "primary" },
+          on: {
+            press: {
+              action: "submit",
+              params: { target: `${base}/` },
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
+function resultScreen(
+  base: string,
+  cast: OldestCast,
+  viewerFid: number,
+): SnapHandlerResult {
   const date = formatDate(cast.timestamp);
   const userLabel = clamp(`@${cast.username}`, 100);
   const castText = clamp(cast.text, 320);
@@ -146,7 +208,7 @@ function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
               action: "compose_cast",
               params: {
                 text: shareText,
-                embeds: ["https://first-cast.vercel.app/"],
+                embeds: [`https://first-cast.vercel.app/?fid=${viewerFid}`],
               },
             },
           },
@@ -218,7 +280,8 @@ function formatDate(iso: string): string {
 
 function buildShareText(cast: OldestCast): string {
   const date = formatDate(cast.timestamp);
-  const excerpt = cast.text.length > 80 ? cast.text.slice(0, 77) + "..." : cast.text;
+  const excerpt =
+    cast.text.length > 80 ? cast.text.slice(0, 77) + "..." : cast.text;
   return `My first Farcaster cast was on ${date} 🕰️\n\n"${excerpt}"\n\nWhat was yours? 👇\n\nvia @tekrox.eth`;
 }
 
