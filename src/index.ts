@@ -150,7 +150,7 @@ function sharedScreen(base: string, cast: OldestCast): SnapHandlerResult {
         sep2: { type: "separator", props: {} },
         "btn-find": {
           type: "button",
-          props: { label: "Find My First Cast ⚡", variant: "primary" },
+          props: { label: "Dig up my cringe 😬", variant: "primary" },
           on: {
             press: {
               action: "submit",
