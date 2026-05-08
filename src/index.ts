@@ -171,7 +171,10 @@ function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
           on: {
             press: {
               action: "compose_cast",
-              params: { text: shareText },
+              params: {
+                text: shareText,
+                embeds: ["https://first-cast.vercel.app/"],
+              },
             },
           },
         },
@@ -248,7 +251,7 @@ function buildShareText(cast: OldestCast): string {
   const date = formatDate(cast.timestamp);
   const excerpt =
     cast.text.length > 200 ? cast.text.slice(0, 197) + "..." : cast.text;
-  return `My first ever cast on Farcaster 🕰️\n\n"${excerpt}"\n\n— posted ${date}`;
+  return `My first ever cast on Farcaster 🕰️\n\n"${excerpt}"\n\n— posted ${date}\n\nvia @tekrox.eth`;
 }
 
 function clamp(s: string, max: number): string {
