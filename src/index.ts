@@ -109,8 +109,6 @@ function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
   const date = formatDate(cast.timestamp);
   const userLabel = clamp(`@${cast.username}`, 100);
   const castText = clamp(cast.text, 320);
-  const likesLabel = clamp(`❤️ ${cast.likes}`, 30);
-  const recastsLabel = clamp(`🔄 ${cast.recasts}`, 30);
   const shareText = buildShareText(cast);
 
   return {
@@ -122,15 +120,7 @@ function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
         page: {
           type: "stack",
           props: {},
-          children: [
-            "profile",
-            "sep1",
-            "cast-text",
-            "sep2",
-            "stats-row",
-            "btn-share",
-            "footer",
-          ],
+          children: ["profile", "sep1", "cast-text", "sep2", "btn-share"],
         },
         profile: {
           type: "item",
@@ -148,19 +138,6 @@ function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
           props: { content: castText },
         },
         sep2: { type: "separator", props: {} },
-        "stats-row": {
-          type: "stack",
-          props: { direction: "horizontal" },
-          children: ["likes-badge", "recasts-badge"],
-        },
-        "likes-badge": {
-          type: "badge",
-          props: { label: likesLabel, color: "red" },
-        },
-        "recasts-badge": {
-          type: "badge",
-          props: { label: recastsLabel, color: "green" },
-        },
         "btn-share": {
           type: "button",
           props: { label: "Share This Memory 🕰️", variant: "primary" },
@@ -173,10 +150,6 @@ function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
               },
             },
           },
-        },
-        footer: {
-          type: "badge",
-          props: { label: "oldest available cast", color: "gray" },
         },
       },
     },
