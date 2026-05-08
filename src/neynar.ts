@@ -3,6 +3,7 @@ export interface OldestCast {
   timestamp: string;
   hash: string;
   username: string;
+  pfpUrl: string;
   likes: number;
   recasts: number;
 }
@@ -21,6 +22,7 @@ function toCast(c: NeynarCast): OldestCast {
     timestamp: c.timestamp,
     hash: c.hash,
     username: c.author.username,
+    pfpUrl: c.author.pfp_url ?? "",
     likes: c.reactions?.likes_count ?? 0,
     recasts: c.reactions?.recasts_count ?? 0,
   };
@@ -85,6 +87,6 @@ interface NeynarCast {
   text: string;
   timestamp: string;
   hash: string;
-  author: { username: string };
+  author: { username: string; pfp_url?: string };
   reactions?: { likes_count?: number; recasts_count?: number };
 }

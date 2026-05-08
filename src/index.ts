@@ -107,8 +107,7 @@ function landingScreen(base: string): SnapHandlerResult {
 
 function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
   const date = formatDate(cast.timestamp);
-  const userLabel = clamp(`@${cast.username}`, 30);
-  const dateLabel = clamp(date, 30);
+  const userLabel = clamp(`@${cast.username}`, 100);
   const castText = clamp(cast.text, 320);
   const likesLabel = clamp(`❤️ ${cast.likes}`, 30);
   const recastsLabel = clamp(`🔄 ${cast.recasts}`, 30);
@@ -124,7 +123,7 @@ function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
           type: "stack",
           props: {},
           children: [
-            "header-row",
+            "profile",
             "sep1",
             "cast-text",
             "sep2",
@@ -133,18 +132,15 @@ function resultScreen(base: string, cast: OldestCast): SnapHandlerResult {
             "footer",
           ],
         },
-        "header-row": {
-          type: "stack",
-          props: { direction: "horizontal" },
-          children: ["user-badge", "date-badge"],
-        },
-        "user-badge": {
-          type: "badge",
-          props: { label: userLabel, variant: "outline" },
-        },
-        "date-badge": {
-          type: "badge",
-          props: { label: dateLabel, color: "gray" },
+        profile: {
+          type: "item",
+          props: {
+            title: userLabel,
+            description: date,
+            ...(cast.pfpUrl
+              ? { media: { variant: "image", url: cast.pfpUrl, alt: `${cast.username} avatar`, round: true } }
+              : {}),
+          },
         },
         sep1: { type: "separator", props: {} },
         "cast-text": {
