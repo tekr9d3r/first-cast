@@ -245,9 +245,8 @@ function formatDate(iso: string): string {
 
 function buildShareText(cast: OldestCast): string {
   const date = formatDate(cast.timestamp);
-  const excerpt =
-    cast.text.length > 200 ? cast.text.slice(0, 197) + "..." : cast.text;
-  return `My first ever cast on Farcaster 🕰️\n\n"${excerpt}"\n\n— posted ${date}\n\nvia @tekrox.eth`;
+  const excerpt = cast.text.length > 80 ? cast.text.slice(0, 77) + "..." : cast.text;
+  return `My first Farcaster cast was on ${date} 🕰️\n\n"${excerpt}"\n\nWhat was yours? 👇`;
 }
 
 function clamp(s: string, max: number): string {
