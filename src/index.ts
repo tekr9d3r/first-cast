@@ -103,7 +103,7 @@ function landingScreen(base: string): SnapHandlerResult {
         },
         "btn-find": {
           type: "button",
-          props: { label: "How cringe was I? 👀", variant: "primary" },
+          props: { label: "Find My First Cast ⚡", variant: "primary" },
           on: {
             press: {
               action: "submit",
@@ -150,7 +150,7 @@ function sharedScreen(base: string, cast: OldestCast): SnapHandlerResult {
         sep2: { type: "separator", props: {} },
         "btn-find": {
           type: "button",
-          props: { label: "Dig up my cringe 😬", variant: "primary" },
+          props: { label: "Find My First Cast ⚡", variant: "primary" },
           on: {
             press: {
               action: "submit",
