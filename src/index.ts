@@ -43,7 +43,7 @@ const snap: SnapFunction = async (ctx) => {
 };
 
 async function getCachedOrFetch(fid: number): Promise<OldestCast | null> {
-  const cacheKey = `oldest_cast:${fid}`;
+  const cacheKey = `oldest_cast_v3:${fid}`;
   const cached = await store.get(cacheKey);
   if (cached) return JSON.parse(String(cached)) as OldestCast;
 
