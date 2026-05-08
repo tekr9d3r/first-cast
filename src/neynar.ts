@@ -9,27 +9,22 @@ export interface OldestCast {
 }
 
 const NEYNAR_API_BASE = "https://api.neynar.com";
-const NEYNAR_HUB_BASE = "https://hub-api.neynar.com";
-
+// Public Farcaster hub — no API key needed, returns oldest-first by default
+const PINATA_HUB_BASE = "https://hub.pinata.cloud";
 // Farcaster timestamps are seconds since Jan 1, 2021 00:00:00 UTC
 const FARCASTER_EPOCH_MS = 1_609_459_200_000;
-
 // Fallback pagination budget
 const PAGINATION_DEADLINE_MS = 40_000;
 
-function apiKey(): string {
+function apiHeaders(): Record<string, string> {
   const key = process.env.NEYNAR_API_KEY;
   if (!key) throw new Error("NEYNAR_API_KEY is not set");
-  return key;
-}
-
-function apiHeaders(): Record<string, string> {
-  return { "x-api-key": apiKey(), accept: "application/json" };
+  return { "x-api-key": key, accept: "application/json" };
 }
 
 export async function getOldestCast(fid: number): Promise<OldestCast | null> {
   try {
-    const fromHub = await tryHubEndpoint(fid);
+    const fromHub = await tryPublicHub(fid);
     if (fromHub) return fromHub;
     return await paginateFeed(fid);
   } catch {
@@ -37,20 +32,21 @@ export async function getOldestCast(fid: number): Promise<OldestCast | null> {
   }
 }
 
-// ─── Primary: Hub API (2 calls, O(1)) ────────────────────
+// ─── Primary: Pinata public hub (no auth, O(1)) ──────────
 
-async function tryHubEndpoint(fid: number): Promise<OldestCast | null> {
-  const key = apiKey();
-
-  // castsByFid returns oldest-first by default (reverse=false)
-  const hubRes = await fetch(
-    `${NEYNAR_HUB_BASE}/v1/castsByFid?fid=${fid}&pageSize=1&api_key=${key}`,
+async function tryPublicHub(fid: number): Promise<OldestCast | null> {
+  // reverse=false (default) → oldest first; pageSize=1 → just the first
+  const res = await fetch(
+    `${PINATA_HUB_BASE}/v1/castsByFid?fid=${fid}&pageSize=1`,
   );
-  if (!hubRes.ok) return null;
+  if (!res.ok) return null;
 
-  const hubJson = (await hubRes.json()) as { messages?: HubMessage[] };
-  const msg = hubJson.messages?.[0];
-  if (!msg?.data?.castAddBody?.text) return null;
+  const json = (await res.json()) as { messages?: HubMessage[] };
+  const msg = json.messages?.[0];
+  if (!msg?.data) return null;
+
+  const castBody = msg.data.castAddBody;
+  if (!castBody) return null;
 
   const timestamp = new Date(
     FARCASTER_EPOCH_MS + msg.data.timestamp * 1000,
@@ -59,7 +55,7 @@ async function tryHubEndpoint(fid: number): Promise<OldestCast | null> {
   const profile = await getUserProfile(fid);
 
   return {
-    text: msg.data.castAddBody.text,
+    text: castBody.text ?? "",
     timestamp,
     hash: msg.hash ?? "",
     username: profile?.username ?? `fid:${fid}`,
@@ -83,7 +79,7 @@ async function getUserProfile(
   return json.users?.[0] ?? null;
 }
 
-// ─── Fallback: paginate feed (newest-first, walk to end) ─
+// ─── Fallback: paginate Neynar feed (newest-first, walk to end) ─
 
 async function paginateFeed(fid: number): Promise<OldestCast | null> {
   let cursor: string | undefined;
@@ -125,8 +121,8 @@ function toCast(c: NeynarCast): OldestCast {
     hash: c.hash,
     username: c.author.username,
     pfpUrl: c.author.pfp_url ?? "",
-    likes: c.reactions?.likes_count ?? 0,
-    recasts: c.reactions?.recasts_count ?? 0,
+    likes: 0,
+    recasts: 0,
   };
 }
 
@@ -143,5 +139,4 @@ interface NeynarCast {
   timestamp: string;
   hash: string;
   author: { username: string; pfp_url?: string };
-  reactions?: { likes_count?: number; recasts_count?: number };
 }
