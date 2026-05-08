@@ -103,7 +103,7 @@ function landingScreen(base: string): SnapHandlerResult {
         },
         "btn-find": {
           type: "button",
-          props: { label: "Find My First Cast ⚡", variant: "primary" },
+          props: { label: "How cringe was I? 👀", variant: "primary" },
           on: {
             press: {
               action: "submit",
