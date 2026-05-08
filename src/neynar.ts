@@ -10,8 +10,8 @@ export interface OldestCast {
 
 const NEYNAR_BASE = "https://api.neynar.com";
 
-// 20 seconds — stays within Vercel edge function limits
-const PAGINATION_DEADLINE_MS = 20_000;
+// 40 seconds — Vercel edge functions allow up to 60s
+const PAGINATION_DEADLINE_MS = 40_000;
 
 function neynarHeaders(): Record<string, string> {
   const key = process.env.NEYNAR_API_KEY;
